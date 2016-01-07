@@ -4,6 +4,26 @@ enemies_controller = {}
 enemies_controller.enemies = {}
 enemies_controller.image= love.graphics.newImage('enemy.png')
 
+-- function checkCollisions (enemies, bullets)
+--   for i ,e in ipairs(enemies) do
+--     for _,b in pairs(bullets) do
+--       if b.y <= e.y and b.x > e.x and b.x < e.x + e.width then
+--         table.remove(enemies, i)
+--       end
+--     end
+--   end
+-- end
+function checkCollisions(enemies, bullets)
+  for i, e in ipairs(enemies) do
+    for _, b in pairs(bullets) do
+      if b.y <= e.y + e.height and b.x > e.x and b.x < e.x + e.width then
+       table.remove(enemies, i)
+       print("colision")
+      end
+    end
+  end
+end
+
 function love.load ()
   -- player
   player = {}
@@ -17,17 +37,19 @@ function love.load ()
   player.fire = function ()
     if  player.cooldown <= 0 then
       love.audio.play(player.fire_sound)
-      player.cooldown = 60
+      player.cooldown = 30
       bullet = {}
       bullet.x = player.x + 25
       bullet.y = player.y;
       table.insert(player.bullets,bullet)
-
     end
   end
   enemies_controller:spawnEnemy(0,0)
   enemies_controller:spawnEnemy(90,0)
   enemies_controller:spawnEnemy(180,0)
+  enemies_controller:spawnEnemy(270,0)
+  enemies_controller:spawnEnemy(340,0)
+  enemies_controller:spawnEnemy(430,0)
 
 end
 
@@ -35,8 +57,10 @@ function enemies_controller:spawnEnemy (x, y)
   enemy = {}
   enemy.x = x
   enemy.y = y
+  enemy.width = 50
+  enemy.height = 10
   enemy.bullets = {}
-  enemy.speed = 10
+  enemy.speed = 1
   enemy.cooldown = 20
   table.insert(self.enemies,enemy)
 end
@@ -52,6 +76,8 @@ function enemy:fire ()
 end
 
 function love.update (dt)
+  checkCollisions(enemies_controller.enemies, player.bullets)
+
   player.cooldown = player.cooldown - 1
   if love.keyboard.isDown("d") then
     player.x =player.x + player.speed
@@ -62,7 +88,7 @@ function love.update (dt)
       player.fire()
   end
   for _,e in ipairs(enemies_controller.enemies) do
-    e.y = e.y + 3
+    e.y = e.y + e.speed
   end
 
   for i,b in ipairs(player.bullets) do
