@@ -3,7 +3,7 @@ enemy = {}
 enemies_controller = {}
 enemies_controller.enemies = {}
 enemies_controller.image= love.graphics.newImage('enemy.png')
-
+backgroundImage= love.graphics.newImage('background.jpg')
 -- function checkCollisions (enemies, bullets)
 --   for i ,e in ipairs(enemies) do
 --     for _,b in pairs(bullets) do
@@ -44,12 +44,15 @@ function love.load ()
       table.insert(player.bullets,bullet)
     end
   end
-  enemies_controller:spawnEnemy(0,0)
-  enemies_controller:spawnEnemy(90,0)
-  enemies_controller:spawnEnemy(180,0)
-  enemies_controller:spawnEnemy(270,0)
-  enemies_controller:spawnEnemy(340,0)
-  enemies_controller:spawnEnemy(430,0)
+  for i=0,10 do
+    enemies_controller:spawnEnemy(i*90,0)
+  end
+  -- enemies_controller:spawnEnemy(0,0)
+  -- enemies_controller:spawnEnemy(90,0)
+  -- enemies_controller:spawnEnemy(180,0)
+  -- enemies_controller:spawnEnemy(270,0)
+  -- enemies_controller:spawnEnemy(340,0)
+  -- enemies_controller:spawnEnemy(430,0)
 
 end
 
@@ -100,6 +103,7 @@ function love.update (dt)
 end
 function love.draw ()
   -- love.graphics.scale(5)
+  love.graphics.draw(backgroundImage)
   -- rect
  love.graphics.setColor(169, 199, 100)
  love.graphics.draw(player.image,player.x, player.y, 0 , 5, 5);
