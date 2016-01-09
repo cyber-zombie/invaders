@@ -6,11 +6,44 @@ enemies_controller = {}
 enemies_controller.enemies = {}
 enemies_controller.image= love.graphics.newImage('enemy.png')
 backgroundImage= love.graphics.newImage('background.jpg')
+particle_systems = {}
+particle_systems.list = {}
+particle_systems.img = love.graphics.newImage('particle.png')
+
+function particle_systems:spawn(x, y)
+  local ps = {}
+  ps.x = x
+  ps.y = y
+  ps.ps = love.graphics.newParticleSystem(particle_systems.img, 32)
+  ps.ps:setParticleLifetime(2, 4)
+  ps.ps:setEmissionRate(5)
+  ps.ps:setSizeVariation(1)
+  ps.ps:setLinearAcceleration(-20, -20, 20, 20)
+  ps.ps:setColors(100, 255, 100, 255, 0, 255, 0, 255)
+  table.insert(particle_systems.list, ps)
+end
+function particle_systems:draw()
+  for _, v in pairs(particle_systems.list) do
+    love.graphics.draw(v.ps, v.x, v.y, 5, 5)
+  end
+end
+
+function particle_systems:update(dt)
+  for _, v in pairs(particle_systems.list) do
+    v.ps:update(dt)
+  end
+end
+
+function particle_systems:cleanup()
+  -- delete particle systems after a length of time...
+  -- exercise left for the viewer ;)
+end
 
 function checkCollisions(enemies, bullets)
   for i, e in ipairs(enemies) do
     for j, b in ipairs(bullets) do
       if b.y <= e.y + e.height and b.x > e.x and b.x < e.x + e.width then
+        particle_systems:spawn(e.x, e.y)
         table.remove(bullets, j)
         table.remove(enemies, i)
       end
@@ -20,7 +53,11 @@ end
 
 function love.load ()
   -- player
-  print(love.graphics.getHeight())
+  local music = love.audio.newSource('main.mp3')
+  music:setLooping(true)
+  love.audio.play(music)
+  game_over = false
+  game_win = false
   player = {}
   player.x = 0
   player.y = 500
@@ -40,9 +77,13 @@ function love.load ()
       table.insert(player.bullets,bullet)
     end
   end
+  -- spawn enemies
   for i=0,5 do
-    enemies_controller:spawnEnemy(i*90,0)
+    for j = 0,3 do
+      enemies_controller:spawnEnemy(i*90,j*60)
+    end
   end
+
 end
 
 function enemies_controller:spawnEnemy (x, y)
@@ -68,11 +109,11 @@ function enemy:fire ()
 end
 
 function love.update (dt)
-  -- print(dt)
-  gameOver = false
+  -- particle_systems:update(dt)
   checkCollisions(enemies_controller.enemies, player.bullets)
 
   player.cooldown = player.cooldown - 1
+
   if love.keyboard.isDown("d") then
     player.x = player.x + player.speed
   elseif love.keyboard.isDown("a") then
@@ -81,15 +122,19 @@ function love.update (dt)
   if love.keyboard.isDown(" ") then
       player.fire()
   end
-  -- print(love.graphics.getHeight())
+  -- check for wining
+  if #enemies_controller.enemies == 0 then
+    game_win = true
+  end
+  -- enemies falling
   for _,e in ipairs(enemies_controller.enemies) do
     if e.y >= love.graphics.getHeight() then
-      gameOver = true
-      -- print(gameOver)
+      game_over = true
+      -- print(game_win)
     end
     e.y = e.y + e.speed
   end
-
+  -- bullets controller
   for i,b in ipairs(player.bullets) do
     if b.y < -10  then
       table.remove(player.bullets, i)
@@ -99,23 +144,28 @@ function love.update (dt)
 end
 function love.draw ()
   -- love.graphics.scale(5)
-  if gameOver then
+  love.graphics.draw(backgroundImage)
+
+  if game_over then
     love.graphics.print("game over")
     return
+  elseif game_win then
+    love.graphics.print("You Won! Now get drunk, white boy!")
   end
- love.graphics.draw(backgroundImage)
- love.graphics.setColor(169, 199, 100)
- love.graphics.draw(player.image,player.x, player.y, 0, 5 , 5);
- -- enemy
- love.graphics.setColor(255, 255, 255)
 
- for _,e in ipairs(enemies_controller.enemies) do
-   love.graphics.draw(enemies_controller.image, e.x,e.y, 0 , 5 ,5)
- end
+  -- particle_systems:draw()
 
- -- bull
- love.graphics.setColor(255, 255, 255)
- for _,b in ipairs(player.bullets) do
-   love.graphics.rectangle("fill", b.x, b.y, 5, 5)
- end
+  love.graphics.setColor(169, 199, 100)
+  love.graphics.draw(player.image,player.x, player.y, 0, 5 , 5);
+  -- enemy
+  love.graphics.setColor(255, 255, 255)
+
+  for _,e in ipairs(enemies_controller.enemies) do
+    love.graphics.draw(enemies_controller.image, e.x,e.y, 0 , 5 ,5)
+  end
+  -- bullet draw
+  love.graphics.setColor(255, 255, 255)
+  for _,b in ipairs(player.bullets) do
+    love.graphics.rectangle("fill", b.x, b.y, 5, 5)
+    end
 end
