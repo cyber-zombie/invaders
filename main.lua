@@ -1,24 +1,18 @@
+debug = true
+
 love.graphics.setDefaultFilter('nearest','nearest')
 enemy = {}
 enemies_controller = {}
 enemies_controller.enemies = {}
 enemies_controller.image= love.graphics.newImage('enemy.png')
 backgroundImage= love.graphics.newImage('background.jpg')
--- function checkCollisions (enemies, bullets)
---   for i ,e in ipairs(enemies) do
---     for _,b in pairs(bullets) do
---       if b.y <= e.y and b.x > e.x and b.x < e.x + e.width then
---         table.remove(enemies, i)
---       end
---     end
---   end
--- end
+
 function checkCollisions(enemies, bullets)
   for i, e in ipairs(enemies) do
-    for _, b in pairs(bullets) do
+    for j, b in ipairs(bullets) do
       if b.y <= e.y + e.height and b.x > e.x and b.x < e.x + e.width then
-       table.remove(enemies, i)
-       print("colision")
+        table.remove(bullets, j)
+        table.remove(enemies, i)
       end
     end
   end
@@ -26,12 +20,14 @@ end
 
 function love.load ()
   -- player
+  print(love.graphics.getHeight())
   player = {}
   player.x = 0
   player.y = 500
   player.bullets = {}
   player.speed = 10
   player.cooldown = 0
+  player.height = 50
   player.image= love.graphics.newImage('player.png')
   player.fire_sound = love.audio.newSource('SHOOT019.mp3')
   player.fire = function ()
@@ -44,16 +40,9 @@ function love.load ()
       table.insert(player.bullets,bullet)
     end
   end
-  for i=0,10 do
+  for i=0,5 do
     enemies_controller:spawnEnemy(i*90,0)
   end
-  -- enemies_controller:spawnEnemy(0,0)
-  -- enemies_controller:spawnEnemy(90,0)
-  -- enemies_controller:spawnEnemy(180,0)
-  -- enemies_controller:spawnEnemy(270,0)
-  -- enemies_controller:spawnEnemy(340,0)
-  -- enemies_controller:spawnEnemy(430,0)
-
 end
 
 function enemies_controller:spawnEnemy (x, y)
@@ -61,7 +50,7 @@ function enemies_controller:spawnEnemy (x, y)
   enemy.x = x
   enemy.y = y
   enemy.width = 50
-  enemy.height = 10
+  enemy.height = 50
   enemy.bullets = {}
   enemy.speed = 1
   enemy.cooldown = 20
@@ -79,18 +68,25 @@ function enemy:fire ()
 end
 
 function love.update (dt)
+  -- print(dt)
+  gameOver = false
   checkCollisions(enemies_controller.enemies, player.bullets)
 
   player.cooldown = player.cooldown - 1
   if love.keyboard.isDown("d") then
-    player.x =player.x + player.speed
+    player.x = player.x + player.speed
   elseif love.keyboard.isDown("a") then
     player.x = player.x - player.speed
   end
   if love.keyboard.isDown(" ") then
       player.fire()
   end
+  -- print(love.graphics.getHeight())
   for _,e in ipairs(enemies_controller.enemies) do
+    if e.y >= love.graphics.getHeight() then
+      gameOver = true
+      -- print(gameOver)
+    end
     e.y = e.y + e.speed
   end
 
@@ -103,10 +99,13 @@ function love.update (dt)
 end
 function love.draw ()
   -- love.graphics.scale(5)
-  love.graphics.draw(backgroundImage)
-  -- rect
+  if gameOver then
+    love.graphics.print("game over")
+    return
+  end
+ love.graphics.draw(backgroundImage)
  love.graphics.setColor(169, 199, 100)
- love.graphics.draw(player.image,player.x, player.y, 0 , 5, 5);
+ love.graphics.draw(player.image,player.x, player.y, 0, 5 , 5);
  -- enemy
  love.graphics.setColor(255, 255, 255)
 
